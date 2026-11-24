@@ -1,9 +1,67 @@
 <!DOCTYPE html>
-<html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Absensi Kelas | Dashboard</title><link rel="stylesheet" href="style.css"></head><body>
-<header class="top"><div class="brand"><div class="logo">A</div><div><strong>Absensi Kelas</strong><small>Panel Kehadiran Siswa</small></div></div><button id="themeToggle" class="iconbtn" aria-label="Ubah tema">☼</button></header>
-<div class="layout"><aside class="sidebar"><div class="side-title">MENU</div><a class="nav active" href="index.html">▦ Dashboard</a><a class="nav" href="attendance.html">✓ Absensi</a><a class="nav" href="history.html">▤ Data &amp; Riwayat</a><div class="side-note">Kelas XII RPL<br><small>Data disimpan di browser ini</small></div></aside>
-<main><section class="welcome"><div><span class="eyebrow">DASHBOARD</span><h1>Ringkasan Kehadiran</h1><p>Kelola absensi kelas dengan mudah setiap hari.</p></div><div class="datebox" id="todayDate"></div></section>
-<div class="cards"><article class="stat"><div class="stat-label">Jumlah Siswa</div><div class="stat-number" id="totalStudents">34</div><div class="stat-foot">Terdaftar di kelas</div></article><article class="stat green"><div class="stat-label">Hadir Hari Ini</div><div class="stat-number" id="todayPresent">0</div><div class="stat-foot">Siswa hadir</div></article><article class="stat orange"><div class="stat-label">Belum Diabsen</div><div class="stat-number" id="todayPending">34</div><div class="stat-foot">Perlu diperiksa</div></article><article class="stat purple"><div class="stat-label">Rekap Tersimpan</div><div class="stat-number" id="savedDays">0</div><div class="stat-foot">Hari absensi</div></article></div>
-<section class="panel"><div class="panel-head"><div><h2>Mulai Absensi</h2><p>Isi status siswa untuk tanggal hari ini.</p></div><a class="btn primary" href="attendance.html">Buka Absensi →</a></div><div class="tip">💡 <strong>Tips:</strong> Pilih status setiap siswa lalu tekan Simpan Absensi. Data tersimpan di browser menggunakan localStorage.</div></section>
-<section class="panel"><div class="panel-head"><div><h2>Menu Cepat</h2><p>Kelola data kehadiran kelas.</p></div></div><div class="quick"><a class="quickcard" href="attendance.html"><span>✓</span><strong>Isi Absensi</strong><small>Atur status kehadiran</small></a><a class="quickcard" href="history.html"><span>▤</span><strong>Lihat Riwayat</strong><small>Periksa rekap yang disimpan</small></a></div></section>
-<footer>Absensi Kelas · Static Web · Data lokal browser</footer></main></div><script src="app.js"></script></body></html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Absensi Kelas</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">A</div>
+                <div>
+                    <h2>Absensi Kelas</h2>
+                    <p>Panel Kehadiran Siswa</p>
+                </div>
+            </div>
+            <nav class="menu">
+                <p class="menu-label">MENU</p>
+                <a href="index.html" class="active">Dashboard</a>
+                <a href="attendance.html">Absensi</a>
+                <a href="history.html">Data & Riwayat</a>
+            </nav>
+            <div class="sidebar-footer">
+                <strong>Kelas XII RPL</strong>
+                <p>Data disimpan di browser ini</p>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-header">
+                <span class="badge">RINGKASAN HARI INI</span>
+                <h1>Dashboard Kehadiran</h1>
+                <p>Pantau statistik kehadiran siswa Kelas XII RPL secara langsung.</p>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-title">Total Siswa</span>
+                    <h2 id="totalStudentsCount">34</h2>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-title">Hadir Hari Ini</span>
+                    <h2 id="todayPresentCount" class="text-green">0</h2>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-title">Sakit / Izin</span>
+                    <h2 id="todayExcusedCount" class="text-orange">0</h2>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-title">Alpa</span>
+                    <h2 id="todayAbsentCount" class="text-red">0</h2>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Akses Cepat</h3>
+                <p style="margin-bottom: 16px; color: #64748b;">Mulai catat kehadiran hari ini atau kelola daftar nama siswa.</p>
+                <a href="attendance.html" class="btn-primary" style="display: inline-block; text-decoration: none;">Isi Absensi Sekarang</a>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
