@@ -1,4 +1,6 @@
-// Daftar default siswa kelas XII RPL
+const STORAGE_STUDENTS = "ABSENSI_XII_RPL_STUDENTS";
+const STORAGE_RECORDS = "ABSENSI_XII_RPL_RECORDS";
+
 const defaultSiswa = [
   "AISYAH HARI AFIKA LIAWATI",
   "Andika Wahyu Utama",
@@ -36,150 +38,211 @@ const defaultSiswa = [
   "WAHIDATUL MUHAROM"
 ];
 
-// Cek apakah data siswa di localStorage masih kosong, jika ya, masukkan data di atas
-if (!localStorage.getItem('STORAGE_STUDENTS') || JSON.parse(localStorage.getItem('STORAGE_STUDENTS')).length === 0) {
-    // Menyesuaikan dengan format objek/id yang mungkin dipakai di script kamu
-    const formattedStudents = defaultSiswa.map((nama, index) => ({
-        id: index + 1,
-        nama: nama
-    }));
-    localStorage.setItem('STORAGE_STUDENTS', JSON.stringify(formattedStudents));
-}
-const STORAGE_STUDENTS = "absensiKelas_students_v1";
-const STORAGE_RECORDS = "absensiKelas_records_v1";
-const $ = (id) => document.getElementById(id);
-const readData = (key) => { try { return JSON.parse(localStorage.getItem(key)) || []; } catch { return []; } };
-const saveData = (key, value) => localStorage.setItem(key, JSON.stringify(value));
-const today = () => new Date().toLocaleDateString("en-CA");
-
-function setupNavigation() {
-  const toggle = $("menuToggle"), nav = $("navMenu");
-  if (toggle && nav) toggle.addEventListener("click", () => nav.classList.toggle("open"));
-}
-
-function setupHome() {
-  if (!$("totalSiswa")) return;
-  $("totalSiswa").textContent = readData(STORAGE_STUDENTS).length;
-  $("totalCatatan").textContent = readData(STORAGE_RECORDS).length;
-  $("tanggalHariIni").textContent = new Date().toLocaleDateString("id-ID", {day:"2-digit", month:"short", year:"numeric"});
-}
-
-function setupAttendance() {
-  if (!$("studentForm")) return;
-  const dateInput = $("attendanceDate");
-  dateInput.value = today();
-
-  $("studentForm").addEventListener("submit", (event) => {
-    event.preventDefault();
-    const name = $("studentName").value.trim();
-    if (!name) return;
-    const students = readData(STORAGE_STUDENTS);
-    if (students.some(s => s.name.toLowerCase() === name.toLowerCase())) {
-      $("studentMessage").textContent = "Nama siswa sudah ada di daftar.";
-      return;
+// 1. Pastikan data 34 siswa selalu tersedia di localStorage
+function initStudents() {
+    const existing = localStorage.getItem(STORAGE_STUDENTS);
+    if (!existing || JSON.parse(existing).length === 0) {
+        const formatted = defaultSiswa.map((nama, index) => ({
+            id: index + 1,
+            name: nama
+        }));
+        localStorage.setItem(STORAGE_STUDENTS, JSON.stringify(formatted));
     }
-    students.push({id: Date.now(), name});
-    saveData(STORAGE_STUDENTS, students);
-    $("studentName").value = "";
-    $("studentMessage").textContent = "Siswa berhasil ditambahkan.";
-    renderStudents();
-  });
-
-  $("searchStudent").addEventListener("input", renderStudents);
-  dateInput.addEventListener("change", renderStudents);
-  $("saveAttendance").addEventListener("click", saveAttendance);
-  $("exportCsv").addEventListener("click", exportCsv);
-  renderStudents();
-  renderHistory();
 }
 
-function renderStudents() {
-  const body = $("studentTable");
-  if (!body) return;
-  const students = readData(STORAGE_STUDENTS);
-  const records = readData(STORAGE_RECORDS);
-  const date = $("attendanceDate").value;
-  const query = $("searchStudent").value.trim().toLowerCase();
-  const current = records.filter(r => r.date === date);
-  const visible = students.filter(s => s.name.toLowerCase().includes(query));
-  body.innerHTML = "";
-  if (!visible.length) {
-    body.innerHTML = `<tr><td colspan="4" class="empty">${students.length ? "Nama siswa tidak ditemukan." : "Belum ada siswa. Tambahkan nama siswa terlebih dahulu."}</td></tr>`;
-    updateSummary(current);
-    return;
-  }
-  visible.forEach((student, index) => {
-    const saved = current.find(r => r.studentId === student.id);
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${index + 1}</td><td class="student-name"></td><td><select aria-label="Status kehadiran"><option value="Hadir">Hadir</option><option value="Izin">Izin</option><option value="Sakit">Sakit</option><option value="Alpa">Alpa</option></select></td><td><button class="delete-btn" type="button">Hapus</button></td>`;
-    tr.querySelector(".student-name").textContent = student.name;
-    const select = tr.querySelector("select");
-    select.value = saved ? saved.status : "Hadir";
-    select.dataset.studentId = student.id;
-    tr.querySelector(".delete-btn").addEventListener("click", () => {
-      if (!confirm(`Hapus ${student.name} dari daftar siswa?`)) return;
-      saveData(STORAGE_STUDENTS, readData(STORAGE_STUDENTS).filter(s => s.id !== student.id));
-      saveData(STORAGE_RECORDS, readData(STORAGE_RECORDS).filter(r => r.studentId !== student.id));
-      renderStudents(); renderHistory();
+function getTodayDate() {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, "0");
+    const d = String(now.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+}
+
+// 2. Halaman Attendance (Absensi)
+function renderAttendanceTable(filter = "") {
+    const tbody = document.getElementById("studentTable");
+    if (!tbody) return;
+
+    const students = JSON.parse(localStorage.getItem(STORAGE_STUDENTS)) || [];
+    const records = JSON.parse(localStorage.getItem(STORAGE_RECORDS)) || [];
+    const dateInput = document.getElementById("attendanceDate");
+    const selectedDate = dateInput ? dateInput.value : "";
+
+    tbody.innerHTML = "";
+    const filtered = students.filter(s => s.name.toLowerCase().includes(filter.toLowerCase()));
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#64748b;">Nama siswa tidak ditemukan.</td></tr>`;
+        return;
+    }
+
+    filtered.forEach((student, idx) => {
+        let status = "Belum diisi";
+        if (selectedDate) {
+            const found = records.find(r => r.date === selectedDate && r.studentId === student.id);
+            if (found) status = found.status;
+        }
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${idx + 1}</td>
+            <td><strong>${student.name}</strong></td>
+            <td>
+                <select class="status-select" data-student-id="${student.id}">
+                    <option value="Belum diisi" ${status === "Belum diisi" ? "selected" : ""}>Belum diisi</option>
+                    <option value="Hadir" ${status === "Hadir" ? "selected" : ""}>Hadir</option>
+                    <option value="Sakit" ${status === "Sakit" ? "selected" : ""}>Sakit</option>
+                    <option value="Izin" ${status === "Izin" ? "selected" : ""}>Izin</option>
+                    <option value="Alpa" ${status === "Alpa" ? "selected" : ""}>Alpa</option>
+                </select>
+            </td>
+        `;
+        tbody.appendChild(tr);
     });
-    body.appendChild(tr);
-  });
-  updateSummary(current);
-}
-
-function updateSummary(records) {
-  const count = {Hadir:0, Izin:0, Sakit:0, Alpa:0};
-  records.forEach(r => { if (count[r.status] !== undefined) count[r.status]++; });
-  $("attendanceSummary").textContent = `Hadir: ${count.Hadir} · Izin: ${count.Izin} · Sakit: ${count.Sakit} · Alpa: ${count.Alpa}`;
 }
 
 function saveAttendance() {
-  const date = $("attendanceDate").value;
-  if (!date) { $("saveMessage").textContent = "Pilih tanggal terlebih dahulu."; return; }
-  const selects = [...document.querySelectorAll("#studentTable select")];
-  if (!selects.length) { $("saveMessage").textContent = "Tambahkan siswa terlebih dahulu."; return; }
-  const records = readData(STORAGE_RECORDS).filter(r => !(r.date === date && selects.some(s => Number(s.dataset.studentId) === r.studentId)));
-  selects.forEach(select => records.push({date, studentId:Number(select.dataset.studentId), status:select.value}));
-  saveData(STORAGE_RECORDS, records);
-  $("saveMessage").textContent = "Absensi berhasil disimpan di browser ini.";
-  renderStudents(); renderHistory();
+    const dateInput = document.getElementById("attendanceDate");
+    const msg = document.getElementById("saveMessage");
+    if (!dateInput || !dateInput.value) {
+        alert("Silakan pilih tanggal absensi terlebih dahulu!");
+        return;
+    }
+
+    const dateVal = dateInput.value;
+    const selects = document.querySelectorAll(".status-select");
+    let records = JSON.parse(localStorage.getItem(STORAGE_RECORDS)) || [];
+
+    // Hapus catatan lama pada tanggal yang sama sebelum menyimpan yang baru
+    records = records.filter(r => r.date !== dateVal);
+
+    selects.forEach(sel => {
+        if (sel.value !== "Belum diisi") {
+            records.push({
+                date: dateVal,
+                studentId: Number(sel.dataset.studentId),
+                status: sel.value
+            });
+        }
+    });
+
+    localStorage.setItem(STORAGE_RECORDS, JSON.stringify(records));
+    if (msg) {
+        msg.textContent = `Tersimpan untuk tanggal ${dateVal} di browser ini.`;
+        msg.style.color = "#16a34a";
+    }
 }
 
+// 3. Halaman Dashboard (index.html)
+function renderDashboard() {
+    const totalEl = document.getElementById("totalStudentsCount");
+    if (!totalEl) return;
+
+    const students = JSON.parse(localStorage.getItem(STORAGE_STUDENTS)) || [];
+    const records = JSON.parse(localStorage.getItem(STORAGE_RECORDS)) || [];
+    const today = getTodayDate();
+
+    const todayRecords = records.filter(r => r.date === today);
+    const hadir = todayRecords.filter(r => r.status === "Hadir").length;
+    const sakitIzin = todayRecords.filter(r => r.status === "Sakit" || r.status === "Izin").length;
+    const alpa = todayRecords.filter(r => r.status === "Alpa").length;
+
+    totalEl.textContent = students.length;
+    document.getElementById("todayPresentCount").textContent = hadir;
+    document.getElementById("todayExcusedCount").textContent = sakitIzin;
+    document.getElementById("todayAbsentCount").textContent = alpa;
+}
+
+// 4. Halaman Data & Riwayat (history.html)
 function renderHistory() {
-  const body = $("historyTable");
-  if (!body) return;
-  const students = readData(STORAGE_STUDENTS);
-  const records = readData(STORAGE_RECORDS).slice().sort((a,b) => b.date.localeCompare(a.date));
-  body.innerHTML = "";
-  if (!records.length) { body.innerHTML = '<tr><td colspan="3" class="empty">Belum ada riwayat absensi.</td></tr>'; return; }
-  records.forEach(record => {
-    const student = students.find(s => s.id === record.studentId);
-    if (!student) return;
-    const tr = document.createElement("tr");
-    const dateCell = document.createElement("td");
-    dateCell.textContent = new Date(record.date + "T00:00:00").toLocaleDateString("id-ID", {day:"2-digit",month:"short",year:"numeric"});
-    const nameCell = document.createElement("td"); nameCell.textContent = student.name;
-    const statusCell = document.createElement("td"); statusCell.textContent = record.status;
-    tr.append(dateCell, nameCell, statusCell); body.appendChild(tr);
-  });
-  if (!body.children.length) body.innerHTML = '<tr><td colspan="3" class="empty">Belum ada riwayat absensi.</td></tr>';
+    const historyBody = document.getElementById("historyTable");
+    if (!historyBody) return;
+
+    const students = JSON.parse(localStorage.getItem(STORAGE_STUDENTS)) || [];
+    const records = JSON.parse(localStorage.getItem(STORAGE_RECORDS)) || [];
+
+    historyBody.innerHTML = "";
+    if (records.length === 0) {
+        historyBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#64748b;">Belum ada riwayat absensi tersimpan.</td></tr>`;
+        return;
+    }
+
+    // Urutkan dari tanggal terbaru
+    const sorted = [...records].sort((a, b) => b.date.localeCompare(a.date));
+    sorted.forEach(rec => {
+        const student = students.find(s => s.id === rec.studentId);
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${rec.date}</td>
+            <td>${student ? student.name : "Siswa Terhapus"}</td>
+            <td><strong>${rec.status}</strong></td>
+        `;
+        historyBody.appendChild(tr);
+    });
 }
 
-function exportCsv() {
-  const students = readData(STORAGE_STUDENTS);
-  const records = readData(STORAGE_RECORDS);
-  if (!records.length) { alert("Belum ada data absensi untuk diunduh."); return; }
-  const rows = [["Tanggal","Nama Siswa","Status"]];
-  records.forEach(r => {
-    const student = students.find(s => s.id === r.studentId);
-    if (student) rows.push([r.date, student.name, r.status]);
-  });
-  const csv = rows.map(row => row.map(value => `"${String(value).replaceAll('"','""')}"`).join(",")).join("\n");
-  const blob = new Blob(["\ufeff" + csv], {type:"text/csv;charset=utf-8;"});
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a"); link.href = url; link.download = "riwayat-absensi-kelas.csv"; link.click();
-  URL.revokeObjectURL(url);
-}
+// Inisialisasi saat halaman dibuka
+document.addEventListener("DOMContentLoaded", () => {
+    initStudents();
+
+    // Setup Halaman Attendance
+    const dateInput = document.getElementById("attendanceDate");
+    if (dateInput) {
+        dateInput.value = getTodayDate();
+        dateInput.addEventListener("change", () => renderAttendanceTable());
+        renderAttendanceTable();
+    }
+
+    const searchInput = document.getElementById("searchStudent");
+    if (searchInput) {
+        searchInput.addEventListener("input", (e) => renderAttendanceTable(e.target.value));
+    }
+
+    const allPresentBtn = document.getElementById("allPresentBtn");
+    if (allPresentBtn) {
+        allPresentBtn.addEventListener("click", () => {
+            document.querySelectorAll(".status-select").forEach(sel => sel.value = "Hadir");
+        });
+    }
+
+    const saveBtn = document.getElementById("saveBtn");
+    if (saveBtn) {
+        saveBtn.addEventListener("click", saveAttendance);
+    }
+
+    // Setup Halaman Dashboard
+    renderDashboard();
+
+    // Setup Halaman History
+    renderHistory();
+
+    const addStudentBtn = document.getElementById("addStudentBtn");
+    if (addStudentBtn) {
+        addStudentBtn.addEventListener("click", () => {
+            const nameInput = document.getElementById("newStudentName");
+            const name = nameInput.value.trim();
+            if (!name) return;
+
+            const students = JSON.parse(localStorage.getItem(STORAGE_STUDENTS)) || [];
+            const newId = students.length > 0 ? Math.max(...students.map(s => s.id)) + 1 : 1;
+            students.push({ id: newId, name: name });
+            localStorage.setItem(STORAGE_STUDENTS, JSON.stringify(students));
+            nameInput.value = "";
+            alert(`Siswa "${name}" berhasil ditambahkan!`);
+        });
+    }
+
+    const resetDataBtn = document.getElementById("resetDataBtn");
+    if (resetDataBtn) {
+        resetDataBtn.addEventListener("click", () => {
+            if (confirm("Kembalikan daftar siswa ke 34 nama awal?")) {
+                localStorage.removeItem(STORAGE_STUDENTS);
+                initStudents();
+                alert("Daftar siswa berhasil di-reset ke 34 siswa awal.");
+            }
+        });
+    }
+});
 
 setupNavigation();
 setupHome();
