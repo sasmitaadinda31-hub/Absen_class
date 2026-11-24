@@ -1,3 +1,50 @@
+// Daftar default siswa kelas XII RPL
+const defaultSiswa = [
+  "AISYAH HARI AFIKA LIAWATI",
+  "Andika Wahyu Utama",
+  "Anita",
+  "AUREL EFFILIAN NADIJUWA PUTRI",
+  "CHAIDARUR ROHMAN",
+  "CHARISSA MARTHA DEWI",
+  "DINDA NUR LANIA DEWI",
+  "DWI ASTUTI",
+  "ERDIVA BERLIANA PUTRI",
+  "Keany Agatha Nadzif",
+  "KHOIRUN NIYSA",
+  "Khoyrul Rahmandhani",
+  "KIRANA DWI RAHMAYANI",
+  "Kusnul Khotimah",
+  "Lila Nur Latifah",
+  "LUKMAN ARDIANSYAH ROMADHONI",
+  "MACHFUDZ KHASAN",
+  "MAR'ATUS SHOLIHAH",
+  "MARSYA NISWA AZZAHRA",
+  "Moh. Rafael Rizky Abadi",
+  "NOVITA ANGGRAENI",
+  "NUR KHASAN",
+  "NUR KHOLIFAH",
+  "RENATHA PUTRI",
+  "Rifa Arinal Haq",
+  "Ririn Ida Aulia",
+  "RISMA VINUSTIKA",
+  "SASMITA ADINDA PUTRI",
+  "SHAFA ATIKA ZAHRA",
+  "Sholekha",
+  "SILVIA NUR ROHMAH",
+  "SUPRIADI",
+  "Tiara Celcilya Putri",
+  "WAHIDATUL MUHAROM"
+];
+
+// Cek apakah data siswa di localStorage masih kosong, jika ya, masukkan data di atas
+if (!localStorage.getItem('STORAGE_STUDENTS') || JSON.parse(localStorage.getItem('STORAGE_STUDENTS')).length === 0) {
+    // Menyesuaikan dengan format objek/id yang mungkin dipakai di script kamu
+    const formattedStudents = defaultSiswa.map((nama, index) => ({
+        id: index + 1,
+        nama: nama
+    }));
+    localStorage.setItem('STORAGE_STUDENTS', JSON.stringify(formattedStudents));
+}
 const STORAGE_STUDENTS = "absensiKelas_students_v1";
 const STORAGE_RECORDS = "absensiKelas_records_v1";
 const $ = (id) => document.getElementById(id);
