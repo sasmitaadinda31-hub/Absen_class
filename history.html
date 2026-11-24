@@ -1,1 +1,73 @@
-<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Riwayat | Absensi Kelas</title><link rel="stylesheet" href="style.css"></head><body><header class="top"><a class="brand" href="index.html"><div class="logo">A</div><div><strong>Absensi Kelas</strong><small>Panel Kehadiran Siswa</small></div></a><button id="themeToggle" class="iconbtn">☼</button></header><div class="layout"><aside class="sidebar"><div class="side-title">MENU</div><a class="nav" href="index.html">▦ Dashboard</a><a class="nav" href="attendance.html">✓ Absensi</a><a class="nav active" href="history.html">▤ Data &amp; Riwayat</a><div class="side-note">Kelas XII RPL<br><small>Data disimpan di browser ini</small></div></aside><main><section class="welcome"><div><span class="eyebrow">REKAP DATA</span><h1>Data &amp; Riwayat Absensi</h1><p>Riwayat absensi yang telah disimpan pada browser ini.</p></div></section><section class="panel"><div class="panel-head"><div><h2>Riwayat Harian</h2><p>Tekan tanggal untuk melihat detail siswa.</p></div><button class="btn secondary" id="exportCsv">Unduh CSV</button></div><div id="historyList" class="history-list"></div><div id="historyDetail" class="history-detail"></div><div class="savebar"><span>Data hanya tersimpan di perangkat/browser ini.</span><button class="btn danger" id="clearHistory">Hapus Riwayat</button></div></section><footer>Absensi Kelas · Static Web · Data lokal browser</footer></main></div><script src="app.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data & Riwayat | Absensi Kelas</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">A</div>
+                <div>
+                    <h2>Absensi Kelas</h2>
+                    <p>Panel Kehadiran Siswa</p>
+                </div>
+            </div>
+            <nav class="menu">
+                <p class="menu-label">MENU</p>
+                <a href="index.html">Dashboard</a>
+                <a href="attendance.html">Absensi</a>
+                <a href="history.html" class="active">Data & Riwayat</a>
+            </nav>
+            <div class="sidebar-footer">
+                <strong>Kelas XII RPL</strong>
+                <p>Data disimpan di browser ini</p>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-header">
+                <span class="badge">ARSIP & KELOLA</span>
+                <h1>Data & Riwayat Absensi</h1>
+                <p>Lihat rekap kehadiran yang tersimpan atau tambah data siswa baru.</p>
+            </div>
+
+            <div class="card" style="margin-bottom: 24px;">
+                <h3>Tambah Siswa Baru</h3>
+                <div class="filter-bar" style="margin-top: 12px; margin-bottom: 0;">
+                    <div class="input-group flex-grow">
+                        <input type="text" id="newStudentName" placeholder="Masukkan nama lengkap siswa baru...">
+                    </div>
+                    <button id="addStudentBtn" type="button" class="btn-primary">Tambah Siswa</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h3>Riwayat Kehadiran Tersimpan</h3>
+                    <button id="resetDataBtn" type="button" class="btn-danger">Reset ke 34 Siswa Awal</button>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tanggal</th>
+                                <th>Nama Siswa</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTable">
+                            <!-- Diisi otomatis oleh script.js -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
